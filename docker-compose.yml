@@ -1,0 +1,54 @@
+# Este archivo de Docker Compose define tres servicios: app, db y tests.
+# 
+# Servicios:
+# 
+# 1. app:
+#    - Construye la imagen de Docker desde el directorio actual.
+#    - Expone el puerto 8080.
+#    - Depende del servicio db.
+#    - Establece la variable de entorno DATABASE_URL a /app/users.db.
+#    - Monta el directorio actual en /main y un volumen nombrado sqlite_data en /app.
+#    - Se reinicia a menos que se detenga.
+# 
+# 2. db:
+#    - Utiliza la imagen nouchka/sqlite3.
+#    - Monta un volumen nombrado sqlite_data en /app.
+# 
+# 3. tests:
+#    - Construye la imagen de Docker desde el directorio actual.
+#    - Ejecuta el comando `go test ./tests -cover`.
+#    - Depende del servicio db.
+#    - Establece la variable de entorno DATABASE_URL a /app/sqlite.db.
+# 
+# Volúmenes:
+# - sqlite_data: Un volumen nombrado utilizado tanto por los servicios app y db para persistir datos.
+
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=/app/users.db
+    volumes:
+      - .:/main
+      - sqlite_data:/app
+    restart: unless-stopped
+
+  db:
+    image: nouchka/sqlite3
+    volumes:
+      - sqlite_data:/app
+  
+  tests:
+    build: .
+    command: go test ./tests -cover
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=/app/users.db
+
+volumes:
+  sqlite_data:
