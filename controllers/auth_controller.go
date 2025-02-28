@@ -48,8 +48,8 @@ func Register(c *gin.Context) {
 // Si las credenciales son válidas, genera y devuelve un token JWT.
 func Login(c *gin.Context) {
 	var input struct {
-		EmailOrUsername string `json:"emailOrUsername"`
-		Password        string `json:"password"`
+		Email    string `json:"email"`
+		Password string `json:"password"`
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -57,8 +57,18 @@ func Login(c *gin.Context) {
 		return
 	}
 
+	if input.Email == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Falta el campo correo"})
+		return
+	}
+
+	if input.Password == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Falta el campo contraseña"})
+		return
+	}
+
 	var user models.User
-	err := config.DB.QueryRow("SELECT id, username, email, phone, password FROM users WHERE email = ? OR username = ?", input.EmailOrUsername, input.EmailOrUsername).
+	err := config.DB.QueryRow("SELECT id, username, email, phone, password FROM users WHERE email = ? OR username = ?", input.Email, input.Email).
 		Scan(&user.ID, &user.Username, &user.Email, &user.Phone, &user.Password)
 
 	if err == sql.ErrNoRows || err != nil {
