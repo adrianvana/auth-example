@@ -2,6 +2,7 @@ package routes
 
 import (
 	"auth-example/controllers"
+	"auth-example/middlewares"
 
 	"github.com/gin-gonic/gin"
 )
@@ -16,5 +17,12 @@ func SetupRouter() *gin.Engine {
 	r := gin.Default()
 	r.POST("/register", controllers.Register)
 	r.POST("/login", controllers.Login)
+
+	protected := r.Group("/")
+	protected.Use(middlewares.ValidateToken())
+	{
+		protected.GET("/random-user", controllers.GetRandomUser)
+	}
+
 	return r
 }
